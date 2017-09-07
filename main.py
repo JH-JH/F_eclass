@@ -1,23 +1,28 @@
-import urllib3
-import certifi
 import rsa
-import json
+import requests
 
-#basic request
-url = "http://www.google.com"
-http = urllib3.PoolManager()
-result = http.request('GET',url)
-print(result.data)
+#학생 id 와 pw. 추후 암호화 필요
+id = b"st_id".encode('utf8')
+pw = b"st_pw".encode('utf8')
 
+#로그인 url
+url_user = "https://eclass.dongguk.edu/User.do"
+params = {'cmd':'getRsaPublicKey'}
+session = requests.Session()
 
-#target requst
-#rsa_pk_url = 'https://eclass.dongguk.edu/User.do?cmd=getRsaPublicKey'
-rsa_pk_url = 'https://eclass.dongguk.edu/User.do'
+response = session.get(url_user,params=params)
+result = response.json()
+print(result)
+#n,e 설정 후 Public Key 초기화
+n = int(result['pubKey1'],16) #pubKey1, 256 length(hex)
+e = int(result['pubKey2'],16) #pubKey2, 10001(hex) 65537(int)
+pubKey = rsa.PublicKey(n,e) #Public Key setting
 
-#http 가 아니라 https 라서 인증서 오류나는듯. 관련지식 검색 필요
-http = urllib3.PoolManager(cert_reqs="CERT_REQUIRED",ca_cert=certifi.where())
-#http = urllib3.PoolManager()
-#r = http.request('GET',rsa_pk_url,fields={'cmd':'getRsaPublicKey'})
-#r = http.request_encode_url('GET',rsa_pk_url,fields={'cmd':'getRsaPublicKey'})
-#print(r.data)
+idCrypto = rsa.encrypt(id,pubKey)
+pwCrypto = rsa.encrypt(pw,pubKey)
 
+#hex string 으로 변환
+print(idCrypto.hex())
+print(pwCrypto.hex())
+response = session.post(url,data = {'paramUserId':idCrypto.hex(), 'paramPassword':pwCrypto.hex()})
+response = session.get("https://eclass.dongguk.edu/Main.do?cmd=viewHome")
