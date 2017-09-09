@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 config_path = "C:\\eclass\\"
 user_config = "user_info.yaml" #사용자 id,pw 수강강좌 목록
-lecture_config = "leture_info.yaml"
+lecture_config = "leture_info.yaml" #강의별 글 목록 상태 등을 저장
 session = requests.Session()
 
 
@@ -23,9 +23,10 @@ def user_init():
         #파일이 존재할 경우
         print("File exist!")
         print("사용자 정보를 읽어옵니다.")
-        stream = open(config_path + user_config, 'r')
-        #stream = io.FileIO(config_path+user_config,'r')
+        #stream = open(config_path + user_config, 'r')
+        stream = io.FileIO(config_path+user_config,'r')
         user_info =  yaml.load(stream)
+        stream.close()
     else:
         #파일이 없을경우 = 처음 접속할경우, id, pw 를 입력받아 씀
         print("사용자 정보가 없습니다. ID 와 PW 를 입력해주세요")
@@ -36,6 +37,7 @@ def user_init():
         stream = open(config_path+user_config,'w')
         #stream = io.FileIO(config_path + user_config, 'w')
         yaml.dump(user_info, stream, default_flow_style=False)
+        stream.close()
     return user_info
 
 def user_login(p_id,p_pw,session):
@@ -60,8 +62,13 @@ def user_login(p_id,p_pw,session):
               'cmd': 'loginUser',
               'userDTO.outsiderYn': 'N'}
     session.post(url_user, data=params)
-    return session
-
+    response = session.get("https://eclass.dongguk.edu/Main.do?cmd=viewHome")
+    #로그인 성공 여부 체크
+    if response.text.find(str(p_id)) == -1:
+        return False
+    else:
+        return True
+    
 #user_info.yaml 과 비교해서 강좌 목록 변경을 확인함
 def lecture_init(user_info, session):
     response = session.get("https://eclass.dongguk.edu/Main.do?cmd=viewHome")
@@ -83,10 +90,18 @@ def lecture_init(user_info, session):
         print("수강목록이 변경이 감지 되었습니다.")
     print("현재 사용자 정보")
     print(user_info)
+    print("변경된 사용자 정보")
+    print(tmp_info)
         #개수는 똑같으나 개수가 변경되었을 경우
 
 
 
 user_info = user_init()
-user_login(user_info['id'],user_info['pw'],session)
-lecture_init(user_info, session)
+login_result = user_login(user_info['id'],user_info['pw'],session)
+if login_result == True:
+    print("로그인성공! 강좌 목록조회로 넘어갑니다.")
+    lecture_init(user_info, session)
+else:
+    print("로그인실패 ㅜㅠ")
+
+
