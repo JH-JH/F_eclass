@@ -23,7 +23,8 @@ def user_init():
         #파일이 존재할 경우
         print("File exist!")
         print("사용자 정보를 읽어옵니다.")
-        stream = io.FileIO(config_path+user_config,'r')
+        stream = open(config_path + user_config, 'r')
+        #stream = io.FileIO(config_path+user_config,'r')
         user_info =  yaml.load(stream)
     else:
         #파일이 없을경우 = 처음 접속할경우, id, pw 를 입력받아 씀
@@ -31,7 +32,9 @@ def user_init():
         user_info = {}
         user_info['id'] = input("ID : ")
         user_info['pw'] = input("PW : ")
-        stream = io.FileIO(config_path + user_config, 'w')
+        user_info['lecture'] = {}
+        stream = open(config_path+user_config,'w')
+        #stream = io.FileIO(config_path + user_config, 'w')
         yaml.dump(user_info, stream, default_flow_style=False)
     return user_info
 
