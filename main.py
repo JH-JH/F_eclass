@@ -58,6 +58,3 @@ if __name__ == "__main__":
     Dialog.show()
     app.exec_()
 
-
-    app.exec_()
-
