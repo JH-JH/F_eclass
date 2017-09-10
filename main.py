@@ -128,7 +128,6 @@ def get_notice(session,lecture_code):
     else:
         print("공지내용이 없습니다.")
 
-
     
 
 user_info = user_init()
