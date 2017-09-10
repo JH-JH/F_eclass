@@ -7,6 +7,8 @@
 - requests **2.18.4** (http://docs.python-requests.org/en/master/user/advanced/)
 - beautifulsoup4 **4.6.0** (https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
 - PyYAML **3.12** (http://pyyaml.org/)
+- PyQt5 **5.6.0** (https://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.6/)
+
 ---
 # Contact
 - njsnacker@gmail.com

@@ -5,6 +5,8 @@ import yaml
 import io
 import os.path
 import sqlite3
+import UI
+import sys
 from bs4 import BeautifulSoup
 
 config_path = "C:\\eclass\\"
@@ -128,7 +130,6 @@ def get_notice(session,lecture_code):
     else:
         print("공지내용이 없습니다.")
 
-    
 
 user_info = user_init()
 login_result = user_login(user_info['id'],user_info['pw'],session)
