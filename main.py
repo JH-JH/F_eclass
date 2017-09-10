@@ -10,7 +10,11 @@ class Login(QtWidgets.QDialog):
 
     @pyqtSlot()
     def LoginClicked(self):
-        print(self.ui.userID.text(), self.ui.userPW.text())
+        global  app
+        if self.ui.userID.text() != "" and self.ui.userPW.text() != "":
+            print(self.ui.userID.text(), self.ui.userPW.text())
+            sys.exit(app.exec())
+
 
 
 if __name__ == '__main__':
