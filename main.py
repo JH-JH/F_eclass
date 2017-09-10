@@ -2,8 +2,6 @@ import sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from PyQt5.QtCore import pyqtSlot
 
-id = ""
-pw = ""
 class Login(QtWidgets.QDialog):
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
@@ -12,11 +10,10 @@ class Login(QtWidgets.QDialog):
 
     @pyqtSlot()
     def LoginClicked(self):
-        global id, pw
-        id = self.ui.userID.text()
-        pw = self.ui.userPW.text()
-        print(id,pw)
+        print(self.ui.userID.text(), self.ui.userPW.text())
 
-app = QtWidgets.QApplication(sys.argv)
-w = Login()
-sys.exit(app.exec())
+
+if __name__ == '__main__':
+    app = QtWidgets.QApplication(sys.argv)
+    w = Login()
+    sys.exit(app.exec())
