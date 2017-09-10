@@ -95,7 +95,6 @@ def lecture_init(user_info, session):
     print(tmp_info)
         #개수는 똑같으나 개수가 변경되었을 경우
 
-
 def get_notice(session,lecture_code):
     url = "https://eclass.dongguk.edu/Course.do"
     params = {'cmd':'viewBoardContentsList',
@@ -128,16 +127,47 @@ def get_notice(session,lecture_code):
     else:
         print("공지내용이 없습니다.")
 
-    
+def get_refer(session,lecture_code): #학습자료실
+    url = "https://eclass.dongguk.edu/Main.do"
+    #https: // eclass.dongguk.edu / Reference.do?cmd = viewLearningReferenceList & courseDTO.courseId = S2017U0002003UCSE406601 & mainDTO.parentMenuId = menu_00091 & mainDTO.menuId = menu_00232
+    #/Main.do?cmd=moveCourseMenu&
+    # mainDTO.parentMenuId=menu_00091&
+    # mainDTO.menuId=menu_00232&
+    # courseDTO.courseId=S2017U0002003UCSE406601
+    params = {'cmd':'moveCourseMenu',
+              'courseDTO.courseId':"S2017U0002003UCSE406601",
+              'mainDTO.parentMenuId':'menu_00091',
+              'mainDTO.menuId':'menu_00232'}
+    response = session.get(url,params=params)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    result = soup.find_all("table", {"class": "boardListBasic"})
+    if (result.__len__() != 0):
+        result = result[0].contents[5]
+        article_num = result.contents.__len__() - 1
+
+        for i in range(article_num // 2):
+            now_article = result.contents[i * 2 + 1]
+            tmp = now_article.contents[3].find_all('a')
+            javascript_code = tmp[0].attrs['href']
+            print(javascript_code)
+            print(now_article.contents[3].text.strip())  # 글 제목
+            print(now_article.contents[7].text.strip())  # 작성자
+            print(now_article.contents[9].text.strip())  # 작성일자
+            print("이상!!!")
+    else:
+        print("공지내용이 없습니다.")
 
 user_info = user_init()
 login_result = user_login(user_info['id'],user_info['pw'],session)
 if login_result == True:
     print("로그인성공! 강좌 목록조회로 넘어갑니다.")
     lecture_init(user_info, session)
-    #쏘공 S2017U0002003UCSE405802
-    #S2017U0002003UDES330701 뭔지모르는 손교수님꺼
-    get_notice(session,"S2017U0002003UDES330701")
+    #S2017U0002003UCSE405802 쏘공
+    #S2017U0002003UDES330701 개별연구
+    #S2017U0002003UCSE202401 프언개
+    #S2017U0002003UCSE406601 종설1
+    get_notice(session,"S2017U0002003UCSE406601")
+    get_refer(session,"S2017U0002003UCSE406601")
 else:
     print("로그인실패 ㅜㅠ")
 
