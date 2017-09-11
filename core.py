@@ -1,11 +1,8 @@
-import rsa
-import copy
-import requests
-import yaml
-import io
-import os.path
-import sqlite3
+import rsa, requests, yaml
 from bs4 import BeautifulSoup
+import copy,io, os.path
+import sqlite3
+
 
 config_path = "C:\\eclass\\"
 user_config = "user_info.yaml"  # 사용자 id,pw 수강강좌 목록
@@ -20,8 +17,20 @@ class Lecture:
 
 
 # 설정 경로로부터 파일을 읽어서 사용자 정보 초기화
-def user_init():
-    if os.path.exists(config_path + user_config):
+class User:
+    user_info = None
+    session = None
+    def __init__(self):
+        self.session = requests.Session()
+        print(1)
+
+    def user_check(self):
+        if os.path.exists(config_path + user_config):
+            return True
+        else:
+            return False
+
+    def load_file(self):
         # 파일이 존재할 경우
         print("File exist!")
         print("사용자 정보를 읽어옵니다.")
@@ -29,49 +38,47 @@ def user_init():
         stream = io.FileIO(config_path + user_config, 'r')
         user_info = yaml.load(stream)
         stream.close()
-    else:
-        # 파일이 없을경우 = 처음 접속할경우, id, pw 를 입력받아 씀
-        print("사용자 정보가 없습니다. ID 와 PW 를 입력해주세요")
-        user_info = {}
-        user_info['id'] = input("ID : ")
-        user_info['pw'] = input("PW : ")
-        user_info['lecture'] = {}
+
+    def init(self,id_p, pw_p):
+        self.user_info['id'] = id_p
+        self.user_info['pw'] = pw_p
+        self.user_info['lecture'] = {}
         stream = open(config_path + user_config, 'w')
-        # stream = io.FileIO(config_path + user_config, 'w')
-        yaml.dump(user_info, stream, default_flow_style=False)
+        yaml.dump(self.user_info, stream, default_flow_style=False)
         stream.close()
-    return user_info
 
+    def login(self):
+        if ((self.user_info['id'].__len__()==0)or(self.user_info['pw'].__len__()==0)):
+            print("사용자 정보가 제대로 초기화 되지 않았습니다.")
+            return False
+        else:
+            id = str(self.user_info['id']).encode()
+            pw = self.user_info['pw'].encode()
+            url = "https://eclass.dongguk.edu/User.do"
+            params = {'cmd': 'getRsaPublicKey'}
+            response = self.session.get(url, params=params)
+            result = response.json()
 
-def user_login(p_id, p_pw, session):
-    id = str(p_id).encode()
-    pw = p_pw.encode()
+            # n,e 설정 후 Public Key 초기화
+            n = int(result['pubKey1'], 16)  # pubKey1, 256 length(hex)
+            e = int(result['pubKey2'], 16)  # pubKey2, 10001(hex) 65537(int)
+            pubKey = rsa.PublicKey(n, e)  # Public Key setting
 
-    url_user = "https://eclass.dongguk.edu/User.do"
-    params = {'cmd': 'getRsaPublicKey'}
-    response = session.get(url_user, params=params)
-    result = response.json()
+            idCrypto = rsa.encrypt(id, pubKey)
+            pwCrypto = rsa.encrypt(pw, pubKey)
 
-    # n,e 설정 후 Public Key 초기화
-    n = int(result['pubKey1'], 16)  # pubKey1, 256 length(hex)
-    e = int(result['pubKey2'], 16)  # pubKey2, 10001(hex) 65537(int)
-    pubKey = rsa.PublicKey(n, e)  # Public Key setting
+            params = {'userDTO.paramUserId': idCrypto.hex(),
+                      'userDTO.paramPassword': pwCrypto.hex(),
+                      'cmd': 'loginUser',
+                      'userDTO.outsiderYn': 'N'}
+            self.session.post(url, data=params)
+            response = self.session.get("https://eclass.dongguk.edu/Main.do?cmd=viewHome")
 
-    idCrypto = rsa.encrypt(id, pubKey)
-    pwCrypto = rsa.encrypt(pw, pubKey)
-
-    params = {'userDTO.paramUserId': idCrypto.hex(),
-              'userDTO.paramPassword': pwCrypto.hex(),
-              'cmd': 'loginUser',
-              'userDTO.outsiderYn': 'N'}
-    session.post(url_user, data=params)
-    response = session.get("https://eclass.dongguk.edu/Main.do?cmd=viewHome")
-    # 로그인 성공 여부 체크
-    if response.text.find(str(p_id)) == -1:
-        return False
-    else:
-        return True
-
+            # 로그인 성공 여부 체크
+            if response.text.find(str(self.user_info['id'])) == -1:
+                return False
+            else:
+                return True
 
 # user_info.yaml 과 비교해서 강좌 목록 변경을 확인함
 def lecture_init(user_info, session):
@@ -162,7 +169,7 @@ def get_refer(session, lecture_code):  # 학습자료실
     else:
         print("공지내용이 없습니다.")
 
-
+'''
 user_info = user_init()
 login_result = user_login(user_info['id'], user_info['pw'], session)
 if login_result == True:
@@ -176,5 +183,5 @@ if login_result == True:
     get_refer(session, "S2017U0002003UCSE406601")
 else:
     print("로그인실패 ㅜㅠ")
-
+'''
 

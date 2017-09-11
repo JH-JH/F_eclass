@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
+import core
 
 
 class Ui_Login(object):
@@ -35,6 +36,7 @@ class Ui_Login(object):
         self.label.setText(_translate("Dialog", "ID:"))
         self.label_2.setText(_translate("Dialog", "PW:"))
         self.LoginButton.setText(_translate("Dialog", "Login"))
+
 class Action_Login(QtWidgets.QDialog):
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
@@ -51,7 +53,6 @@ class Action_Login(QtWidgets.QDialog):
             Dialog.show()
         else:
             print(" > ID와 PW를 입력해주세요!")
-
 
 class Ui_Main(object):
     def setupUi(self, Dialog):
@@ -198,6 +199,7 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
+
     Dialog = Action_Login()
     Dialog.ui = Ui_Login()
     Dialog.ui.setupUi(Dialog)
