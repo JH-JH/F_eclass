@@ -55,11 +55,7 @@ class Action_Login(QtWidgets.QDialog):
             print(" > ID와 PW를 입력해주세요!")
 
 class Ui_Main(object):
-    def setupUi(self, Dialog):
-        Dialog.setObjectName("Dialog")
-        Dialog.setEnabled(True)
-        Dialog.resize(1086, 819)
-        Dialog.setAutoFillBackground(False)
+    def tabWidgetInit(self):
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
         self.tabWidget.setEnabled(True)
         self.tabWidget.setGeometry(QtCore.QRect(10, 10, 781, 681))
@@ -67,38 +63,9 @@ class Ui_Main(object):
         self.tabWidget.setMovable(False)
         self.tabWidget.setTabBarAutoHide(False)
         self.tabWidget.setObjectName("tabWidget")
+    def addtabInit(self):
         self.Class1 = QtWidgets.QWidget()
         self.Class1.setObjectName("Class1")
-        self.treeWidget = QtWidgets.QTreeWidget(self.Class1)
-        self.treeWidget.setGeometry(QtCore.QRect(10, 10, 761, 641))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.treeWidget.setFont(font)
-        self.treeWidget.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
-        self.treeWidget.setAcceptDrops(False)
-        self.treeWidget.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.treeWidget.setAutoFillBackground(False)
-        self.treeWidget.setInputMethodHints(QtCore.Qt.ImhNone)
-        self.treeWidget.setAnimated(False)
-        self.treeWidget.setAllColumnsShowFocus(False)
-        self.treeWidget.setHeaderHidden(False)
-        #self.treeWidget.setExpandsOnDoubleClick(False)
-
-        self.treeWidget.setObjectName("treeWidget")
-        item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget)
-        item_0.setExpanded(True)
-        item_1 = QtWidgets.QTreeWidgetItem(item_0)
-        item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget)
-        item_0.setExpanded(True)
-        item_1 = QtWidgets.QTreeWidgetItem(item_0)
-        item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget)
-        item_0.setExpanded(True)
-        item_1 = QtWidgets.QTreeWidgetItem(item_0)
-        self.treeWidget.header().setCascadingSectionResizes(True)
-        self.treeWidget.header().resizeSection(0,400)
-        self.treeWidget.header().setMinimumSectionSize(300)
-        self.treeWidget.header().setHighlightSections(True)
-        self.treeWidget.header().setSortIndicatorShown(False)
         self.tabWidget.addTab(self.Class1, "")
         self.Class2 = QtWidgets.QWidget()
         self.Class2.setObjectName("Class2")
@@ -121,12 +88,61 @@ class Ui_Main(object):
         self.Class8 = QtWidgets.QWidget()
         self.Class8.setObjectName("Class8")
         self.tabWidget.addTab(self.Class8, "")
+    def treeWidgetInit(self):
+        self.treeWidget = QtWidgets.QTreeWidget(self.Class1)
+        self.treeWidget.setGeometry(QtCore.QRect(10, 10, 761, 641))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.treeWidget.setFont(font)
+        self.treeWidget.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
+        self.treeWidget.setAcceptDrops(False)
+        self.treeWidget.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.treeWidget.setAutoFillBackground(False)
+        self.treeWidget.setInputMethodHints(QtCore.Qt.ImhNone)
+        self.treeWidget.setAnimated(False)
+        self.treeWidget.setAllColumnsShowFocus(False)
+        self.treeWidget.setHeaderHidden(False)
+        #self.treeWidget.setExpandsOnDoubleClick(False)
+        self.treeWidget.setObjectName("treeWidget")
+    def treeWidgetItemInit(self):
+        item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget)
+        item_0.setExpanded(True)
+        item_1 = QtWidgets.QTreeWidgetItem(item_0)
+        item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget)
+        item_0.setExpanded(True)
+        item_1 = QtWidgets.QTreeWidgetItem(item_0)
+        item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget)
+        item_0.setExpanded(True)
+        item_1 = QtWidgets.QTreeWidgetItem(item_0)
+
+        self.treeWidget.header().setCascadingSectionResizes(True)
+        self.treeWidget.header().resizeSection(0,400)
+        self.treeWidget.header().setMinimumSectionSize(300)
+        self.treeWidget.header().setHighlightSections(True)
+        self.treeWidget.header().setSortIndicatorShown(False)
+
+    def treeWidgetInit2(self):
         self.treeWidget_2 = QtWidgets.QTreeWidget(Dialog)
         self.treeWidget_2.setGeometry(QtCore.QRect(805, 40, 271, 641))
         self.treeWidget_2.setObjectName("treeWidget_2")
+    def treeWidgetItemInit2(self):
         item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
         item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
         item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("Dialog")
+        Dialog.setEnabled(True)
+        Dialog.resize(1086, 819)
+        Dialog.setAutoFillBackground(False)
+
+        self.tabWidgetInit()
+        self.addtabInit()
+
+        self.treeWidgetInit()
+        self.treeWidgetItemInit()
+
+        self.treeWidgetInit2()
+        self.treeWidgetItemInit2()
 
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
@@ -135,6 +151,8 @@ class Ui_Main(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+
+        # 트리 내용
         self.treeWidget.setSortingEnabled(False)
         self.treeWidget.headerItem().setText(0, _translate("Dialog", "Class / 학수번호 / 교수님 ...."))
         self.treeWidget.headerItem().setText(1, _translate("Dialog", "읽음 표시"))
@@ -153,6 +171,8 @@ class Ui_Main(object):
         self.treeWidget.topLevelItem(2).child(0).setText(0, _translate("Dialog", "공지사항_1"))
         self.treeWidget.topLevelItem(2).child(0).setText(1, _translate("Dialog", "X"))
         self.treeWidget.setSortingEnabled(__sortingEnabled)
+
+        # 탭 이름 설정
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class1), _translate("Dialog", "T_Class1"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class2), _translate("Dialog", "T_Class2"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class3), _translate("Dialog", "T_Class3"))
@@ -161,12 +181,16 @@ class Ui_Main(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class6), _translate("Dialog", "T_Class6"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class7), _translate("Dialog", "T_Class7"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class8), _translate("Dialog", "T_Class8"))
+
+        # 트리2 초기 구문
         self.treeWidget_2.headerItem().setText(0, _translate("Dialog", "과제명"))
         self.treeWidget_2.headerItem().setText(1, _translate("Dialog", "과목명"))
         self.treeWidget_2.headerItem().setText(2, _translate("Dialog", "제출"))
         self.treeWidget_2.headerItem().setText(3, _translate("Dialog", "제출기한"))
         __sortingEnabled = self.treeWidget_2.isSortingEnabled()
         self.treeWidget_2.setSortingEnabled(False)
+
+        # 트리 내용
         self.treeWidget_2.topLevelItem(0).setText(0, _translate("Dialog", "형식언어과제1"))
         self.treeWidget_2.topLevelItem(0).setText(1, _translate("Dialog", "형식언어"))
         self.treeWidget_2.topLevelItem(0).setText(2, _translate("Dialog", "O"))
