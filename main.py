@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
-import core
+#import core
 
 
 class Ui_Login(object):
@@ -57,7 +57,6 @@ class Action_Login(QtWidgets.QDialog):
 
 
 class Ui_Main(object):
-
     def tabWidgetInit(self):
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
         self.tabWidget.setEnabled(True)
@@ -90,16 +89,17 @@ class Ui_Main(object):
         treeWidget.setAnimated(False)
         treeWidget.setAllColumnsShowFocus(False)
         treeWidget.setHeaderHidden(False)
-        # treeWidget.setExpandsOnDoubleClick(False)
         treeWidget.setObjectName("treeWidget")
 
     def treeWidgetItemInit(self, treeWidget):
         item_0 = QtWidgets.QTreeWidgetItem(treeWidget)
         item_0.setExpanded(True)
         item_1 = QtWidgets.QTreeWidgetItem(item_0)
+
         item_0 = QtWidgets.QTreeWidgetItem(treeWidget)
         item_0.setExpanded(True)
         item_1 = QtWidgets.QTreeWidgetItem(item_0)
+
         item_0 = QtWidgets.QTreeWidgetItem(treeWidget)
         item_0.setExpanded(True)
         item_1 = QtWidgets.QTreeWidgetItem(item_0)
@@ -114,7 +114,6 @@ class Ui_Main(object):
         self.treeWidget_2 = QtWidgets.QTreeWidget(Dialog)
         self.treeWidget_2.setGeometry(QtCore.QRect(805, 40, 271, 641))
         self.treeWidget_2.setObjectName("treeWidget_2")
-
     def treeWidgetItemInit2(self):
         item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
         item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
@@ -141,51 +140,76 @@ class Ui_Main(object):
                             QtWidgets.QTreeWidget(self.Classes[5]),
                             QtWidgets.QTreeWidget(self.Classes[6]), QtWidgets.QTreeWidget(self.Classes[7])]
 
-        for i in range(len(self.treeWidgets)):
+        for i in range(self.class_num):
             self.treeWidgetInit(self.treeWidgets[i])
             self.treeWidgetItemInit(self.treeWidgets[i])
         # </treeWidget/ WidgetItem Init>
 
+        #item setup
         self._translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle( self._translate("Dialog", "Dialog"))
 
-        for i in range(8):
+        #set tabName & class Widget Init
+        for i in range(self.class_num):
             self.setTabWidgetName(i,"class"+str(i))
+            __sortingEnabled = self.treeWidgets[i].isSortingEnabled()
+            self.treeWidgets[i].setSortingEnabled(__sortingEnabled)
 
-        self.treeWidgetItem(Dialog, 0)
-        self.treeWidgetItem(Dialog, 1)
+        ##Task Itme
+        class_ix = 0
+        self.setTabWidgetName(class_ix, "형식언어")
+        #set ItemHeader (class_idx, col_num)
+        self.treeWidgets[class_ix].headerItem().setText(0,  self._translate("Dialog", "Class / 학수번호 / 교수님 ...."))
+        self.treeWidgets[class_ix].headerItem().setText(1,  self._translate("Dialog", "읽음 표시"))
+        # <set Item(class_idx, row_num, subrow_num,"name", ischecked)>
+        self.setCategory(class_ix,0,"학습자료실","O")
+        self.setContent(class_ix,0,0,"자료실_1","O")
 
+        self.setCategory(class_ix, 1, "과제", "O")
+        self.setContent(class_ix,1,0,"과제_1","O")
+
+        self.setCategory(class_ix, 2, "공지사항", "X")
+        self.setContent(class_ix,2,0,"공지사항_1","X")
+        # </set Item(class_idx, row_num, subrow_num,"name", ischecked)>
+        ###
+
+        ##Task Itme
+        class_ix = 1
+        self.setTabWidgetName(class_ix, "자료구조")
+        #set ItemHeader (class_idx, col_num)
+        self.treeWidgets[class_ix].headerItem().setText(0,  self._translate("Dialog", "Class / 학수번호 / 교수님 ...."))
+        self.treeWidgets[class_ix].headerItem().setText(1,  self._translate("Dialog", "읽음 표시"))
+        # <set Item(class_idx, row_num, subrow_num,"name", ischecked)>
+        self.setCategory(class_ix,0,"학습자료실","O")
+        self.setContent(class_ix,0,0,"자료구조실_1","O")
+
+        self.setCategory(class_ix, 1, "과제", "O")
+        self.setContent(class_ix,1,0,"과제란망할놈_1","O")
+
+        self.setCategory(class_ix, 2, "공지사항", "X")
+        self.setContent(class_ix,2,0,"공지사항서양_1","X")
+        # </set Item(class_idx, row_num, subrow_num,"name", ischecked)>
+        ###
+
+        #<tree2>
         self.treeWidgetInit2()
         self.treeWidgetItemInit2()
         self.tree2()
-
-        print(1)
-
+        #</tree2>
 
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-    def treeWidgetItem(self, Dialog, Class_ix):
-        # 트리 내용
-        self.treeWidgets[Class_ix].setSortingEnabled(False)
-        self.treeWidgets[Class_ix].headerItem().setText(0,  self._translate("Dialog", "Class / 학수번호 / 교수님 ...."))
-        self.treeWidgets[Class_ix].headerItem().setText(1,  self._translate("Dialog", "읽음 표시"))
-        __sortingEnabled = self.treeWidgets[Class_ix].isSortingEnabled()
-        self.treeWidgets[Class_ix].setSortingEnabled(False)
-        self.treeWidgets[Class_ix].topLevelItem(0).setText(0,  self._translate("Dialog", "학습자료실"))
-        self.treeWidgets[Class_ix].topLevelItem(0).setText(1,  self._translate("Dialog", "O"))
-        self.treeWidgets[Class_ix].topLevelItem(0).child(0).setText(0,  self._translate("Dialog", "자료실_1"))
-        self.treeWidgets[Class_ix].topLevelItem(0).child(0).setText(1,  self._translate("Dialog", "O"))
-        self.treeWidgets[Class_ix].topLevelItem(1).setText(0,  self._translate("Dialog", "과제"))
-        self.treeWidgets[Class_ix].topLevelItem(1).setText(1,  self._translate("Dialog", "O"))
-        self.treeWidgets[Class_ix].topLevelItem(1).child(0).setText(0,  self._translate("Dialog", "과제_1"))
-        self.treeWidgets[Class_ix].topLevelItem(1).child(0).setText(1,  self._translate("Dialog", "O"))
-        self.treeWidgets[Class_ix].topLevelItem(2).setText(0,  self._translate("Dialog", "공지사항"))
-        self.treeWidgets[Class_ix].topLevelItem(2).setText(1,  self._translate("Dialog", "X"))
-        self.treeWidgets[Class_ix].topLevelItem(2).child(0).setText(0,  self._translate("Dialog", "공지사항_1"))
-        self.treeWidgets[Class_ix].topLevelItem(2).child(0).setText(1,  self._translate("Dialog", "X"))
-        self.treeWidgets[Class_ix].setSortingEnabled(__sortingEnabled)
 
+
+
+    def setCategory(self, Class_ix, row, categoryName, ischecked):
+        self.treeWidgets[Class_ix].topLevelItem(row).setText(0, self._translate("Dialog", categoryName))
+        self.treeWidgets[Class_ix].topLevelItem(row).setText(1, self._translate("Dialog", ischecked))
+
+    def setContent(self, Class_ix, row, sub_row, contentName, ischecked):
+        self.treeWidgets[Class_ix].topLevelItem(row).child(sub_row).setText(0,  self._translate("Dialog", contentName))
+        self.treeWidgets[Class_ix].topLevelItem(row).child(sub_row).setText(1,  self._translate("Dialog", ischecked))
 
     def tree2(self):
         # 트리2 초기 구문
