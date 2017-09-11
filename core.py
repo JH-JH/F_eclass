@@ -6,23 +6,19 @@ import sqlite3
 
 config_path = "C:\\eclass\\"
 user_config = "user_info.yaml"  # 사용자 id,pw 수강강좌 목록
-lecture_config = "leture_info.yaml"  # 강의별 글 목록 상태 등을 저장
-session = requests.Session()
-
-
+# 강의별 글 목록 상태 등을 저장 ==> sqlite 로 대체 예정
+# 과제목록 저장 ==> sqlite
 ##단일사용자를 위한 시스템임
 class Lecture:
     """
     """
 
-
-# 설정 경로로부터 파일을 읽어서 사용자 정보 초기화
+#사용자 클래스. 사용자 정보, 세션정보를 다룬다.
 class User:
     user_info = None
     session = None
     def __init__(self):
         self.session = requests.Session()
-        print(1)
 
     def user_check(self):
         if os.path.exists(config_path + user_config):
@@ -33,8 +29,7 @@ class User:
     #사용자 정보가 있을경우
     def load_file(self):
         # 파일이 존재할 경우
-        print("File exist!")
-        print("사용자 정보를 읽어옵니다.")
+        print("File exist! 사용자 정보를 읽어옵니다.")
         # stream = open(config_path + user_config, 'r')
         stream = io.FileIO(config_path + user_config, 'r')
         self.user_info = yaml.load(stream)
@@ -91,9 +86,12 @@ class Db:
     #프로그램을 처음 사용하는경우
     def init(self):
         c = self.conn.cursor()
-        #<ARTICLE> (lecture_code, 구분(과제, 공지사항..), B_ID, LINK, 등록 시간, 읽은 시간, is_done)
+        #<ARTICLE> (lecture_code, 구분(공지사항/학습자료실), B_ID, LINK, 등록 시간, 읽은 시간)
         c.execute("""CREATE TABLE article (lecture_code, gubun, board_id, link, write_time, read_time, is_done)""")
+        #<ASSIGN> (lecture_code, 과제명, 기간, is_done) 등등...
+        #공지사항, 학습자료실의 목록과는 별도의 테이블로 운영
         self.conn.commit()
+
 
 # user_info.yaml 과 비교해서 강좌 목록 변경을 확인함
 def lecture_init(user_info, session):
@@ -120,7 +118,7 @@ def lecture_init(user_info, session):
     print(tmp_info)
     # 개수는 똑같으나 개수가 변경되었을 경우
 
-
+#공지사항 크롤링
 def get_notice(session, lecture_code):
     url = "https://eclass.dongguk.edu/Course.do"
     params = {'cmd': 'viewBoardContentsList',
@@ -153,14 +151,9 @@ def get_notice(session, lecture_code):
     else:
         print("공지내용이 없습니다.")
 
-
+#학습자료실 크롤링
 def get_refer(session, lecture_code):  # 학습자료실
     url = "https://eclass.dongguk.edu/Main.do"
-    # https: // eclass.dongguk.edu / Reference.do?cmd = viewLearningReferenceList & courseDTO.courseId = S2017U0002003UCSE406601 & mainDTO.parentMenuId = menu_00091 & mainDTO.menuId = menu_00232
-    # /Main.do?cmd=moveCourseMenu&
-    # mainDTO.parentMenuId=menu_00091&
-    # mainDTO.menuId=menu_00232&
-    # courseDTO.courseId=S2017U0002003UCSE406601
     params = {'cmd': 'moveCourseMenu',
               'courseDTO.courseId': lecture_code,
               'mainDTO.parentMenuId': 'menu_00091',
@@ -174,7 +167,11 @@ def get_refer(session, lecture_code):  # 학습자료실
 
         for i in range(article_num // 2):
             now_article = result.contents[i * 2 + 1]
-            tmp = now_article.contents[3].find_all('a')
+            try :
+                tmp = now_article.contents[3].find_all('a')
+            except:
+                print("학습자료실에 등록된 내용이 없습니다.")
+                break
             javascript_code = tmp[0].attrs['href']
             print(javascript_code)
             print(now_article.contents[3].text.strip())  # 글 제목
@@ -184,21 +181,23 @@ def get_refer(session, lecture_code):  # 학습자료실
     else:
         print("학습자료실에 등록된 내용이 없습니다.")
 
-
-
+#과제 크롤링
 def get_assign(session, lecture_code):
-    url = "https://eclass.dongguk.edu/Report.do"
-    #?cmd=viewReportInfoPageList&
-    # boardInfoDTO.boardInfoGubun=report&
-    # courseDTO.courseId=S2017U0002003UCSE406601&
-    # mainDTO.parentMenuId=menu_00104&
-    # mainDTO.menuId=menu_00063
-    params = {'cmd': 'viewReportInfoPageList',
+    #과목정보 갱신
+    url = "https://eclass.dongguk.edu/Course.do"
+    params = {'cmd': 'viewStudyHome',
               'courseDTO.courseId': lecture_code,
-              'boardInfoDTO.boardInfoGubun':'report',
+              'boardInfoDTO.boardInfoGubun':'study_home',
+              'gubun': 'study_course'}
+    session.get(url, params=params)
+
+    url = "https://eclass.dongguk.edu/Main.do"
+    params = {'cmd': 'moveCourseMenu',
+              'courseDTO.courseId': lecture_code,
               'mainDTO.parentMenuId': 'menu_00104',
               'mainDTO.menuId': 'menu_00063'}
     response = session.get(url, params=params)
+
     soup = BeautifulSoup(response.text, 'html.parser')
     result = soup.find_all("div", {"id": "listBox"})
     if (result.__len__() != 0):
@@ -210,16 +209,26 @@ def get_assign(session, lecture_code):
             #0 1 2 3 4
             now_article = result[i * 2 + 3]
             #여기서부터 수정
-            tmp = now_article.contents[3].find_all('a')
-            javascript_code = tmp[0].attrs['href']
-            print(javascript_code)
-            print(now_article.contents[3].text.strip())  # 글 제목
-            print(now_article.contents[7].text.strip())  # 작성자
-            print(now_article.contents[9].text.strip())  # 작성일자
+            tmp = now_article.find_all("ul",{"class":"btnBox"})
+            if tmp.__len__() == 0:
+                print("등록된 과제내용이 없습니다.")
+                break
+            try:
+                javascript_code = tmp[0].contents[5].next.attrs['onclick']
+            except:
+                javascript_code = "Invalid"
+            print(javascript_code) # 자바 코드
+            tmp = now_article.find_all("i",{"class":"icon-openbook-color mr10"})
+            print(tmp[0].next.strip())  # 과제 글 제목
+            tmp = now_article.find_all("tbody")
+             #제출정보
+            print(tmp[0].contents[1].contents[1].text.strip())  # 마감기간
+            print(tmp[0].contents[1].contents[13].text.strip())  # 제출유무
+
+
             print("이상!!!")
     else:
-        print("등록된 과제내용이 없습니다.")
-
+        print("err")
 
 
 user = User()
@@ -228,22 +237,30 @@ if user.user_check():
 else:
     user.init()
 
-user.login()
+if (user.login()):
+    print("로그인 성공")
+else :
+    print("로그인 실패")
 
-get_assign(user.session,"S2017U0002003UCSE406601")
-'''
-user_info = user_init()
-login_result = user_login(user_info['id'], user_info['pw'], session)
-if login_result == True:
-    print("로그인성공! 강좌 목록조회로 넘어갑니다.")
-    lecture_init(user_info, session)
-    # S2017U0002003UCSE405802 쏘공
-    # S2017U0002003UDES330701 개별연구
-    # S2017U0002003UCSE202401 프언개
-    # S2017U0002003UCSE406601 종설1
-    get_notice(session, "S2017U0002003UCSE406601")
-    get_refer(session, "S2017U0002003UCSE406601")
-else:
-    print("로그인실패 ㅜㅠ")
-'''
+
+# S2017U0002003UCSE405802 쏘공
+# S2017U0002003UDES330701 개별연구
+# S2017U0002003UCSE202401 프언개
+# S2017U0002003UCSE406601 종설1
+# S2017U0002003UCSE403402 컴구조
+# S2017U0002003UCSE403501 프언개
+# S2017U0002003UCSE403602 인공지능
+# S2017U0002003UCSE403802 데통
+
+#lecture_init(user.user_info,user.session)
+lec_code = "S2017U0002003UCSE403802"
+print()
+print("공지사항을 가져옵니다..")
+get_notice(user.session,lec_code)
+print()
+print("학습자료실 목록 가져옵니다..")
+get_refer(user.session,lec_code)
+print()
+print("과제 목록 가져옵니다..")
+get_assign(user.session,lec_code)
 
