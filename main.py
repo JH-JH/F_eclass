@@ -172,7 +172,7 @@ class Ui_Main(object):
         self.treeWidget.topLevelItem(2).child(0).setText(1, _translate("Dialog", "X"))
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
-        # 탭 이름 설정
+        # 탭 이름 설정#
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class1), _translate("Dialog", "T_Class1"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class2), _translate("Dialog", "T_Class2"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class3), _translate("Dialog", "T_Class3"))
