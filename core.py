@@ -209,6 +209,7 @@ def get_assign(session, lecture_code):
             #3 5 7 9 11
             #0 1 2 3 4
             now_article = result[i * 2 + 3]
+            #여기서부터 수정
             tmp = now_article.contents[3].find_all('a')
             javascript_code = tmp[0].attrs['href']
             print(javascript_code)
