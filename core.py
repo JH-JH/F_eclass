@@ -30,15 +30,17 @@ class User:
         else:
             return False
 
+    #사용자 정보가 있을경우
     def load_file(self):
         # 파일이 존재할 경우
         print("File exist!")
         print("사용자 정보를 읽어옵니다.")
         # stream = open(config_path + user_config, 'r')
         stream = io.FileIO(config_path + user_config, 'r')
-        user_info = yaml.load(stream)
+        self.user_info = yaml.load(stream)
         stream.close()
-
+    
+    #처음 사용
     def init(self,id_p, pw_p):
         self.user_info['id'] = id_p
         self.user_info['pw'] = pw_p
@@ -79,6 +81,19 @@ class User:
                 return False
             else:
                 return True
+
+#데이터베이스 클래스
+class Db:
+
+    def __init__(self,id_p):
+        self.conn = sqlite3.connect(id_p+".db")
+
+    #프로그램을 처음 사용하는경우
+    def init(self):
+        c = self.conn.cursor()
+        #<ARTICLE> (lecture_code, 구분(과제, 공지사항..), B_ID, LINK, 등록 시간, 읽은 시간, is_done)
+        c.execute("""CREATE TABLE article (lecture_code, gubun, board_id, link, write_time, read_time, is_done)""")
+        self.conn.commit()
 
 # user_info.yaml 과 비교해서 강좌 목록 변경을 확인함
 def lecture_init(user_info, session):
@@ -147,7 +162,7 @@ def get_refer(session, lecture_code):  # 학습자료실
     # mainDTO.menuId=menu_00232&
     # courseDTO.courseId=S2017U0002003UCSE406601
     params = {'cmd': 'moveCourseMenu',
-              'courseDTO.courseId': "S2017U0002003UCSE406601",
+              'courseDTO.courseId': lecture_code,
               'mainDTO.parentMenuId': 'menu_00091',
               'mainDTO.menuId': 'menu_00232'}
     response = session.get(url, params=params)
@@ -167,8 +182,54 @@ def get_refer(session, lecture_code):  # 학습자료실
             print(now_article.contents[9].text.strip())  # 작성일자
             print("이상!!!")
     else:
-        print("공지내용이 없습니다.")
+        print("학습자료실에 등록된 내용이 없습니다.")
 
+
+
+def get_assign(session, lecture_code):
+    url = "https://eclass.dongguk.edu/Report.do"
+    #?cmd=viewReportInfoPageList&
+    # boardInfoDTO.boardInfoGubun=report&
+    # courseDTO.courseId=S2017U0002003UCSE406601&
+    # mainDTO.parentMenuId=menu_00104&
+    # mainDTO.menuId=menu_00063
+    params = {'cmd': 'viewReportInfoPageList',
+              'courseDTO.courseId': lecture_code,
+              'boardInfoDTO.boardInfoGubun':'report',
+              'mainDTO.parentMenuId': 'menu_00104',
+              'mainDTO.menuId': 'menu_00063'}
+    response = session.get(url, params=params)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    result = soup.find_all("div", {"id": "listBox"})
+    if (result.__len__() != 0):
+        result = result[0].contents
+        article_num = result.__len__() - 3
+
+        for i in range(article_num // 2):
+            #3 5 7 9 11
+            #0 1 2 3 4
+            now_article = result[i * 2 + 3]
+            tmp = now_article.contents[3].find_all('a')
+            javascript_code = tmp[0].attrs['href']
+            print(javascript_code)
+            print(now_article.contents[3].text.strip())  # 글 제목
+            print(now_article.contents[7].text.strip())  # 작성자
+            print(now_article.contents[9].text.strip())  # 작성일자
+            print("이상!!!")
+    else:
+        print("등록된 과제내용이 없습니다.")
+
+
+
+user = User()
+if user.user_check():
+    user.load_file()
+else:
+    user.init()
+
+user.login()
+
+get_assign(user.session,"S2017U0002003UCSE406601")
 '''
 user_info = user_init()
 login_result = user_login(user_info['id'], user_info['pw'], session)
