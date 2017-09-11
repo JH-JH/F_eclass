@@ -57,6 +57,7 @@ class Action_Login(QtWidgets.QDialog):
 
 
 class Ui_Main(object):
+
     def tabWidgetInit(self):
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
         self.tabWidget.setEnabled(True)
@@ -67,9 +68,16 @@ class Ui_Main(object):
         self.tabWidget.setObjectName("tabWidget")
 
     def addtabInit(self):
-        self.Class1 = QtWidgets.QWidget()
-        self.Class1.setObjectName("Class1")
-        self.tabWidget.addTab(self.Class1, "")
+        self.Classes = []
+        for i in range(self.class_num):
+            print(i)
+            self.Classes.insert(0,QtWidgets.QWidget())
+
+        for i in range(self.class_num):
+            self.Classes[i].setObjectName("Class"+str(i))
+            self.tabWidget.addTab(self.Classes[i], "")
+
+
         self.Class2 = QtWidgets.QWidget()
         self.Class2.setObjectName("Class2")
         self.tabWidget.addTab(self.Class2, "")
@@ -137,26 +145,27 @@ class Ui_Main(object):
 
     def setTabWidgetName(self):
         # 탭 이름 설정#
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class1),  self._translate("Dialog", "T_Class1"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class2),  self._translate("Dialog", "T_Class2"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class3),  self._translate("Dialog", "T_Class3"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class4),  self._translate("Dialog", "T_Class4"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class5),  self._translate("Dialog", "T_Class5"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class6),  self._translate("Dialog", "T_Class6"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class7),  self._translate("Dialog", "T_Class7"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Class8),  self._translate("Dialog", "T_Class8"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[0]),  self._translate("Dialog", "T_Class1"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[1]),  self._translate("Dialog", "T_Class2"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[2]),  self._translate("Dialog", "T_Class3"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[3]),  self._translate("Dialog", "T_Class4"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[4]),  self._translate("Dialog", "T_Class5"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[5]),  self._translate("Dialog", "T_Class6"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[6]),  self._translate("Dialog", "T_Class7"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[7]),  self._translate("Dialog", "T_Class8"))
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.setEnabled(True)
         Dialog.resize(1086, 819)
         Dialog.setAutoFillBackground(False)
+        self.class_num = 8
 
         self.tabWidgetInit()
         self.addtabInit()
 
         # <treeWidget/ WidgetItem Init>
-        self.treeWidgets = [QtWidgets.QTreeWidget(self.Class1), QtWidgets.QTreeWidget(self.Class2),
+        self.treeWidgets = [QtWidgets.QTreeWidget(self.Classes[0]), QtWidgets.QTreeWidget(self.Class2),
                             QtWidgets.QTreeWidget(self.Class3),
                             QtWidgets.QTreeWidget(self.Class4), QtWidgets.QTreeWidget(self.Class5),
                             QtWidgets.QTreeWidget(self.Class6),
