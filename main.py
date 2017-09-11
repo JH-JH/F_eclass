@@ -77,29 +77,6 @@ class Ui_Main(object):
             self.Classes[i].setObjectName("Class"+str(i))
             self.tabWidget.addTab(self.Classes[i], "")
 
-
-        self.Class2 = QtWidgets.QWidget()
-        self.Class2.setObjectName("Class2")
-        self.tabWidget.addTab(self.Class2, "")
-        self.Class3 = QtWidgets.QWidget()
-        self.Class3.setObjectName("Class3")
-        self.tabWidget.addTab(self.Class3, "")
-        self.Class4 = QtWidgets.QWidget()
-        self.Class4.setObjectName("Class4")
-        self.tabWidget.addTab(self.Class4, "")
-        self.Class5 = QtWidgets.QWidget()
-        self.Class5.setObjectName("Class5")
-        self.tabWidget.addTab(self.Class5, "")
-        self.Class6 = QtWidgets.QWidget()
-        self.Class6.setObjectName("Class6")
-        self.tabWidget.addTab(self.Class6, "")
-        self.Class7 = QtWidgets.QWidget()
-        self.Class7.setObjectName("Class7")
-        self.tabWidget.addTab(self.Class7, "")
-        self.Class8 = QtWidgets.QWidget()
-        self.Class8.setObjectName("Class8")
-        self.tabWidget.addTab(self.Class8, "")
-
     def treeWidgetInit(self, treeWidget):
         treeWidget.setGeometry(QtCore.QRect(10, 10, 761, 641))
         font = QtGui.QFont()
@@ -143,16 +120,9 @@ class Ui_Main(object):
         item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
         item_0 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
 
-    def setTabWidgetName(self):
+    def setTabWidgetName(self,class_ix, class_name):
         # 탭 이름 설정#
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[0]),  self._translate("Dialog", "T_Class1"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[1]),  self._translate("Dialog", "T_Class2"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[2]),  self._translate("Dialog", "T_Class3"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[3]),  self._translate("Dialog", "T_Class4"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[4]),  self._translate("Dialog", "T_Class5"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[5]),  self._translate("Dialog", "T_Class6"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[6]),  self._translate("Dialog", "T_Class7"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[7]),  self._translate("Dialog", "T_Class8"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Classes[class_ix]),  self._translate("Dialog", class_name))
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -165,11 +135,12 @@ class Ui_Main(object):
         self.addtabInit()
 
         # <treeWidget/ WidgetItem Init>
-        self.treeWidgets = [QtWidgets.QTreeWidget(self.Classes[0]), QtWidgets.QTreeWidget(self.Class2),
-                            QtWidgets.QTreeWidget(self.Class3),
-                            QtWidgets.QTreeWidget(self.Class4), QtWidgets.QTreeWidget(self.Class5),
-                            QtWidgets.QTreeWidget(self.Class6),
-                            QtWidgets.QTreeWidget(self.Class7), QtWidgets.QTreeWidget(self.Class8)]
+        self.treeWidgets = [QtWidgets.QTreeWidget(self.Classes[0]), QtWidgets.QTreeWidget(self.Classes[1]),
+                            QtWidgets.QTreeWidget(self.Classes[2]),
+                            QtWidgets.QTreeWidget(self.Classes[3]), QtWidgets.QTreeWidget(self.Classes[4]),
+                            QtWidgets.QTreeWidget(self.Classes[5]),
+                            QtWidgets.QTreeWidget(self.Classes[6]), QtWidgets.QTreeWidget(self.Classes[7])]
+
         for i in range(len(self.treeWidgets)):
             self.treeWidgetInit(self.treeWidgets[i])
             self.treeWidgetItemInit(self.treeWidgets[i])
@@ -178,8 +149,8 @@ class Ui_Main(object):
         self._translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle( self._translate("Dialog", "Dialog"))
 
-
-        self.setTabWidgetName()
+        for i in range(8):
+            self.setTabWidgetName(i,"class"+str(i))
 
         self.treeWidgetItem(Dialog, 0)
         self.treeWidgetItem(Dialog, 1)
