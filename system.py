@@ -50,7 +50,6 @@ class User():
         if response.text.find(str(studentNumber)) == -1:
             return False
         else:
-            soup = BeautifulSoup(response.text, 'html.parser')
             exp = r"(?<="+str(studentNumber)+"\().+(?=\))"
             m = re.search(exp,response.text)
             self.__name = m.group()
@@ -194,6 +193,7 @@ class Data():
 class Lecture():
     #시스템 작성
     __lectureCode = None
+    __lectureName = None
     __academicNumber = None
     __classNumber = None
     __professorName = None
@@ -238,11 +238,13 @@ class LectureList():
         userInfo = user.getInfo()
         studentNumber = userInfo['studentNumber']
 
-        # 이수학기 파악
+
         self.__getSemesterList()
+        for key, value in self.__semesterList.items():
+            courseList = self.__refineLectureData(key)
 
 
-
+    #사용자가 이수했던 학기목록을 파악
     def __getSemesterList(self):
         user = User.getInstance()
         user.sessionGet("https://eclass.dongguk.edu/Main.do?cmd=viewHome")  # 홈으로 초기화
@@ -265,6 +267,87 @@ class LectureList():
         for option in soup:
             if option != "\n" :
                 self.__semesterList[option.attrs['value']] = option.text
+
+    #강의데이터에 들어갈 항목들을 학기별로 정제
+    def __refineLectureData(self,semesterCode):
+        user = User.getInstance()
+        user.sessionGet("https://eclass.dongguk.edu/Main.do?cmd=viewHome")  # 홈으로 초기화
+        # 페이지 이동
+        # https://eclass.dongguk.edu/Main.do?cmd=moveMenu&mainDTO.parentMenuId=menu_00026&mainDTO.menuId=menu_00031
+        url = "https://eclass.dongguk.edu/Main.do"
+        params = {'cmd': 'moveMenu',
+                  'mainDTO.parentMenuId': 'menu_00026',
+                  'mainDTO.menuId': 'menu_00031'}
+        user.sessionPost(url, params)
+
+        # https://eclass.dongguk.edu/Study.do?cmd=viewLearnerCourseList&boardInfoDTO.boardInfoGubun=learnercourse&courseTermId=CORS_13080613542906b2006c
+        url = "https://eclass.dongguk.edu/Study.do"
+        params = {'cmd': "viewLearnerCourseList",
+                  'boardInfoDTO.boardInfoGubun': "learnercourse",
+                  'courseTermId':semesterCode}
+        response = user.sessionPost(url,params)
+        soup = BeautifulSoup(response.text,'html.parser')
+        soupResult = soup.find_all('table',{'class':'boardListBasic'})
+        lecture = {}
+        if soupResult.__len__() is not 0:
+            soup = soupResult[0]
+            for lecture in soup.tbody:
+                if lecture != "\n":
+                    exp = r"""(?<=<td><a href="javascript:viewStudyHome\(').+(?='\)">)"""
+                    m = re.search(exp, str(lecture))
+                    lecture['lectureCode'] = m.group()
+                    exp = r"""(?<='\)">).+(?=</a></td>)"""
+                    m = re.search(exp, str(lecture))
+                    lecture['lectureName'] = m.group()
+
+                    # https://eclass.dongguk.edu/Course.do?cmd=viewCourseInfo&boardInfoDTO.boardInfoGubun=course_info&courseDTO.courseId=S2017U0002003UDES330701&mainDTO.parentMenuId=menu_00047&mainDTO.menuId=menu_00053
+                    url = "https://eclass.dongguk.edu/Course.do"
+                    params = {'cmd': 'viewCourseInfo',
+                              'boardInfoDTO.boardInfoGubun':'course_info',
+                              'courseDTO.courseId':lecture['lectureCode'],
+                              'mainDTO.parentMenuId': 'menu_00047',
+                              'mainDTO.menuId': 'menu_00053'}
+                    response = user.sessionPost(url,params)
+                    soup = BeautifulSoup(response.text, 'html.parser')
+
+                    soupResult = soup.find_all('h1',{'class':'f40'})
+                    tempSoup = soupResult[0]
+                    exp = r"""(?<=\n\t\t\t\t_).{2}"""
+                    m = re.search(exp, str(tempSoup.a.text))
+                    print(m)
+
+                    soupResult = soup.find_all('table',{'summary':'강의실에 관련한 기본정보 리스트입니다.'})
+                    tempSoup = soupResult[0]
+                    exp = r"""(?<=</i>과목명\n\t\t\t\t</th>\n<td class="textLeft">\n\t\t\t\t\t).*"""
+                    m = re.search(exp,str(tempSoup))
+                    print(m)
+                    exp = r"""(?<=</i>학수번호\n\t\t\t\t</th>\n<td class="textLeft">\n\t\t\t\t\t).*"""
+                    m = re.search(exp, str(tempSoup))
+                    print(m)
+                    exp = r"""(?<=</i>학점\n\t\t\t\t</th>\n<td class="textLeft">\n\t\t\t\t\t).*(?=학점)"""
+                    m = re.search(exp, str(tempSoup))
+                    print(m)
+                    exp = r"""(?<=</i>수강생수\n\t\t\t\t</th>\n<td class="textLeft">\n\t\t\t\t\t).*(?=명)"""
+                    m = re.search(exp, str(tempSoup))
+                    print(m)
+
+                    soupResult = soup.find_all('table', {'summary': '강의실에 관련한 과목운영자 리스트입니다.'})
+                    tempSoup = soupResult[0]
+                    """     __professorMail = None
+                            __professorContact = None
+                            __dateTime = None
+                            이렇게 남았음. 근데 조교연락처는 어떻게하지?
+                    """
+
+
+
+
+
+
+
+        #print(1)
+
+
 
     def addList(self,lecture):
         NotImplementedError
@@ -291,9 +374,10 @@ class LectureFactory():
 
 user = User.getInstance()
 loginResult = user.login('2013112003', 'asdf1020@@')
+print("로그인중...")
 print(loginResult)
 lectureList = LectureList.getIntance()
-print(1)
+
 
 
 '''
