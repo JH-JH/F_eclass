@@ -266,8 +266,6 @@ class Data():
                 query += '"' + str(j) + '",'
             query = query[:-1]
             query += ')'
-
-        print(query)
         self.query(query)
 
     def getInfo(self,t):
@@ -406,7 +404,7 @@ class LectureList(ListBase):
             raise ValueError("instance already exist!")
         else:
             self.__semesterCode = semesterCode
-            self.__init()
+            self._ListBase__init()
 
     @classmethod
     def getIntance(cls, semesterCode):
@@ -415,14 +413,11 @@ class LectureList(ListBase):
         return cls.__instance
 
     def _ListBase__init(self):
-        localList = self._ListBase__getLocalList()
-        self.__list = localList
-        remoteList = self._ListBase__getRemoteList()
-        oCmpResult = localList.keys() - remoteList.keys()  # drop class
-        nCmpReuslt = remoteList.keys() - localList.keys()  # add class
-        if (oCmpResult.__len__() != 0) or (nCmpReuslt.__len__() != 0):
+        localData = self._ListBase__getLocalList()
+        remoteData = self._ListBase__getRemoteList()
+        if localData.__len__() is not remoteData.__len__():
             print("업데이트(변경) 항목이 있습니다. ")
-            self._ListBase__updateLocalList(remoteList)
+            self._ListBase__updateLocalList(localData, remoteData)
 
         # 해당 학기의
         # self.__getSemesterList()
@@ -432,14 +427,38 @@ class LectureList(ListBase):
     def _ListBase__getLocalList(self):
         # 로컬데이터베이스로부터 강의정보를 읽어들여, data를 구축합니다.
         data = Data.getInstance()
-        data.select('*', )
-        raise NotImplementedError
+        user = User.getInstance()
+        fetchResult = data.select('*', 'Lecture',
+                                  'semester = "' + self.__semesterCode + '" AND studentNumber = "' + user.getInfo(
+                                      'studentNumber') + '"')
+        returnVal = []
+        for i in fetchResult:
+            lecture = {}
+            lecture['lectureCode'] = i[0]
+            lecture['lectureName'] = i[1]
+            lecture['academicNumber'] = i[2]
+            lecture['classNumber'] = i[3]
+            lecture['totalStudentNumber'] = i[4]
+            lecture['grades'] = i[5]
+            lecture['dateTime'] = i[6]
+            lecture['professorName'] = i[7]
+            lecture['professorContact'] = i[8]
+            lecture['professorMail'] = i[9]
+            lecture['assistant1Name'] = i[10]
+            lecture['assistant1Contact'] = i[11]
+            lecture['assistant1Mail'] = i[12]
+            lecture['assistant2Name'] = i[13]
+            lecture['assistant2Contact'] = i[14]
+            lecture['assistant2Mail'] = i[15]
+            returnVal.append(lecture)
+        return returnVal
 
     def _ListBase__getRemoteList(self):
         lectureData = self.__scrapLectureData(self.__semesterCode)
-        raise NotImplementedError
+        return lectureData
 
-    def _ListBase__updatLocalList(self):
+    def _ListBase__updateLocalList(self, local, remote):
+
         raise NotImplementedError
 
     # 강의데이터에 들어갈 항목들을 학기별로 정제
@@ -593,6 +612,9 @@ class LectureFactory():
             cls.__instance = LectureFactory()
         return cls.__instance
 
+    def createLecture(self):
+        raise NotImplementedError
+
 
 class System():
     __instance = None
@@ -644,3 +666,4 @@ if __name__ == "__main__":
     print("학기목록 조회 & 업데이트 완료")
 
     print("\n학기에 해당하는 강의정보를 불러옵니다.")
+    lectureList = LectureList.getIntance('CORS_170221A123822I0f1040')
