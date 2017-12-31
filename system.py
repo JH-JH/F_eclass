@@ -1,8 +1,33 @@
 import os, sqlite3
+from abc import  *
 from bs4 import BeautifulSoup
 import requests, rsa, re
 
 programName = "donggukEclassHelper"
+
+class Singleton(type):
+	_instances = {}
+
+	def __call__(cls, *args, **kwargs):
+		if cls not in cls._instances:
+			cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+		return cls._instances[cls]
+
+#학기목록, 강의목록, 과제목록, 공지사항목록, 학습자료실 목록에 사용
+class ListBase(metaclass=ABCMeta):
+
+    @abstractmethod
+    def __init(self):
+        pass
+
+    @abstractmethod
+    def __getLocalList(self):
+        pass
+
+    @abstractmethod
+    def __getRemoteList(self):
+        pass
+
 
 
 class User():
@@ -71,8 +96,6 @@ class User():
     def sessionGet(self, url):
         return  self.__session.get(url)
 
-
-
 class Data():
     __Instance = None
     __dataPath = os.environ['LOCALAPPDATA'] + "\\" + programName
@@ -118,6 +141,13 @@ class Data():
                                 `studentNumber` INTEGER NOT NULL PRIMARY KEY,
                                 `name` TEXT );
                                 ''')
+        # Semester <학번, 학기코드, 학기이름>
+        self.__cursor.execute('''create table `Semester` (
+                                        `studentNumber` INTEGER,
+                                        `semesterCode` TEXT,
+                                        `semesterName` TEXT,
+                                        PRIMARY KEY (studentNumber,semesterCode, semesterName) );
+                                        ''')
         # Lecture <강의코드, 교수님성함, 교수님연락처, 교수님메일, 학수번호, 분반, 수강생수, 학점, 성적비중, 한줄메모, 수업날짜, 폴더경로>
         self.__cursor.execute('''create table `Lecture` (
                                 `lectureCode` TEXT NOT NULL PRIMARY KEY,
@@ -198,6 +228,7 @@ class Data():
 
     def __init(self):
         if (self.__firstCheck() is True):
+            print('프로그램을 처음 실행합니다. 디렉토리 및 데이터베이스를 생성합니다.')
             self.__firstInit()
         self.__dbConnection = sqlite3.connect(self.__dataPath + "\\" + programName + ".db")
         self.__cursor = self.__dbConnection.cursor()
@@ -205,6 +236,23 @@ class Data():
     def query(self, query):
         self.__cursor.execute(query)
         self.__dbConnection.commit()
+
+    def select(self, _select, _from, _where, _order_by=None):
+        if _select == "":
+            _select = "*"
+        if _order_by is None:
+            query = 'SELECT '+_select+' FROM '+_from+ ' WHERE '+_where
+        else :
+            query = 'SELECT ' + _select + ' FROM ' + _from + ' WHERE ' + _where + ' ORDER BY ' + _order_by
+        self.query(query)
+        return self.__cursor.fetchall()
+
+    def getInfo(self,t):
+        if (t == 'connection'):
+            if self.__dbConnection is not None:
+                return True
+            else:
+                return False
 
 class Lecture():
     #시스템 작성
@@ -231,14 +279,77 @@ class Lecture():
     __directory = None
     __semester = None
 
-    def __init__(self,lectureCode, academicNumber, classNumber, professorName, professorMail, profssorContact,
-                 totalStudentNumber, dateTime):
-        NotImplementedError
+    def __init__(self,lectureData):
+        raise NotImplementedError
+
+    def updateInfo(self,t,v):
+        raise NotImplementedError
+
+    def getInfo(self,t):
+        raise NotImplementedError
+
+class SemesterList(ListBase):
+    __Instance = None
+    __list = {}
+    __LectureListMap = {}
+
+    def __init__(self):
+        if self.__Instance is not None:
+            raise ValueError("instance already exist!")
+        else:
+            self._ListBase__init()
+
+    def __del__(self):
+        pass
+
+    @classmethod
+    def getInstance(cls):
+        if cls.__Instance is None:
+            cls.__Instance = SemesterList()
+        return cls.__Instance
+
+    def _ListBase__init(self):
+        # 로컬 학기목록 로드
+        localList = self._ListBase__getLocalList()
+
+        raise NotImplementedError
 
 
-    def updateMemo(self):
-        a = 1
+    # 로컬에 저장된 학기목록 로드
+    def _ListBase__getLocalList(self):
+        data = Data.getInstance()
+        raise NotImplementedError
+        
+    # 사용자가 이수했던 학기목록을 파악
+    # 학기코드(key) : 학기이름(value)로 구성
+    # ex) { '@@@@' : '2017년 2학기' }
+    def _ListBase__getRemoteList(self):
+        user = User.getInstance()
+        user.sessionGet("https://eclass.dongguk.edu/Main.do?cmd=viewHome")  # 홈으로 초기화
+        # 페이지 이동
+        # https://eclass.dongguk.edu/Main.do?cmd=moveMenu&mainDTO.parentMenuId=menu_00026&mainDTO.menuId=menu_00031
+        url = "https://eclass.dongguk.edu/Main.do"
+        params = {'cmd': 'moveMenu',
+                  'mainDTO.parentMenuId': 'menu_00026',
+                  'mainDTO.menuId': 'menu_00031'}
+        user.sessionPost(url, params)
 
+        # https://eclass.dongguk.edu/Study.do?cmd=viewLearnerCourseList&boardInfoDTO.boardInfoGubun=learnercourse
+        url = "https://eclass.dongguk.edu/Study.do"
+        params = {'cmd': "viewLearnerCourseList",
+                  'boardInfoDTO.boardInfoGubun': "learnercourse"}
+        response = user.sessionPost(url, params)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        soupResult = soup.find_all(id='termBox')
+        soup = soupResult[0]
+        remoteList = {}
+        for option in soup:
+            if option != "\n":
+                remoteList[option.attrs['value']] = option.text
+        return remoteList
+
+
+#학기별로 하나씩 가지고 있게 된다.
 class LectureList():
     __instance = None
     __list = []
@@ -258,40 +369,15 @@ class LectureList():
         return cls.__instance
 
     def __init(self):
-        #학기 목록 확인
-        #로컬데이터 load
-        #eclass 업데이터 체크
-        #업데이트 확인
+        # 학기 목록 확인
+        # 1. 로컬에 저장된 학기목록 load
+        # 2. eclass에서 불러온 학기목록과 체크
+        # 3. 업데이트 반영
 
         #해당 학기의
         self.__getSemesterList()
         for key, value in self.__semesterList.items():
             courseList = self.__scrapLectureData(key)
-
-
-    #사용자가 이수했던 학기목록을 파악
-    def __getSemesterList(self):
-        user = User.getInstance()
-        user.sessionGet("https://eclass.dongguk.edu/Main.do?cmd=viewHome")  # 홈으로 초기화
-        # 페이지 이동
-        # https://eclass.dongguk.edu/Main.do?cmd=moveMenu&mainDTO.parentMenuId=menu_00026&mainDTO.menuId=menu_00031
-        url = "https://eclass.dongguk.edu/Main.do"
-        params = {'cmd': 'moveMenu',
-                  'mainDTO.parentMenuId': 'menu_00026',
-                  'mainDTO.menuId': 'menu_00031'}
-        user.sessionPost(url, params)
-
-        # https://eclass.dongguk.edu/Study.do?cmd=viewLearnerCourseList&boardInfoDTO.boardInfoGubun=learnercourse
-        url = "https://eclass.dongguk.edu/Study.do"
-        params = {'cmd': "viewLearnerCourseList",
-                  'boardInfoDTO.boardInfoGubun': "learnercourse"}
-        response = user.sessionPost(url, params)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        soupResult = soup.find_all(id='termBox')
-        soup = soupResult[0]
-        for option in soup:
-            if option != "\n" :
-                self.__semesterList[option.attrs['value']] = option.text
 
     #강의데이터에 들어갈 항목들을 학기별로 정제
     def __scrapLectureData(self,semesterCode):
@@ -425,9 +511,7 @@ class LectureList():
         return lectureDataList
 
     def addList(self,lecture):
-        NotImplementedError
-
-
+        raise NotImplementedError
 
 class LectureFactory():
     __instance = None
@@ -437,7 +521,7 @@ class LectureFactory():
             raise ValueError("instance already exist!")
         else:
             #constructor
-            NotImplementedError
+            raise NotImplementedError
 
     @classmethod
     def getInstance(cls):
@@ -445,26 +529,29 @@ class LectureFactory():
             cls.__instance = LectureFactory()
         return cls.__instance
 
-#    def createLecture(self):
 
 
-user = User.getInstance()
-loginResult = user.login('2013112003', 'asdf1020@@')
-print("로그인중...")
-print(loginResult)
-lectureList = LectureList.getIntance()
+def systemCheck():
+    # 디렉토리 존재유무
+    # 데이터베이스 존재유무
+    # 네트워크 연결여부 검사
+    raise NotImplementedError
 
 
-
-'''
-#Data 클래스 테스트
-data = Data.getInstance()
-print(1)
-'''
-
-'''
-#사용자 로그인 테스트
-user = User.getInstance()
-loginResult = user.login('id', 'password')
-print(loginResult)'''
-
+if __name__ == "__main__":
+    user = User.getInstance()
+    print('로그인중..')
+    if user.login('2013112003', 'asdf1020@@') is not True:
+        print('로그인 실패')
+        exit()
+    print('로그인 성공! '+ user.getInfo('name') + '님, 환영합니다.')
+    
+    print('로컬데이터베이스 연결중..')
+    data = Data.getInstance()
+    if data.getInfo('connection') is not True:
+        print('로컬데이터베이스 연결 실패! 관리자에게 문의하세요')
+        exit()
+    print('로컬데이터베이스 연결 성공.')
+    print('\n학기 목록을 조회합니다..')
+    semesterList = SemesterList.getInstance()
+    
