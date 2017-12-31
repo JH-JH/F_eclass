@@ -54,7 +54,6 @@ class User():
         else:
             return "oops!"
 
-
     def login(self, studentNumber, password):
         id = str(studentNumber).encode()
         pw = str(password).encode()
@@ -82,7 +81,7 @@ class User():
         else:
             exp = r"(?<="+str(studentNumber)+"\().+(?=\))"
             m = re.search(exp,response.text)
-            self.__studentNumber = studentNumber
+            self.__studentNumber = str(studentNumber)
             self.__name = m.group()
             return True
 
@@ -146,7 +145,15 @@ class Data():
                                         ''')
         # Lecture <강의코드, 교수님성함, 교수님연락처, 교수님메일, 학수번호, 분반, 수강생수, 학점, 성적비중, 한줄메모, 수업날짜, 폴더경로>
         self.__cursor.execute('''create table `Lecture` (
-                                `lectureCode` TEXT NOT NULL PRIMARY KEY,
+                                `studentNumber` INTEGER,
+                                `semester` TEXT,
+                                `lectureCode` TEXT NOT NULL,
+                                `lectureName` TEXT, 
+                                `academicNumber` TEXT,
+                                `classNumber` INTEGER,
+                                `totalStudentNumber` INTEGER,
+                                `grades` INTEGER,
+                                `dateTime` TEXT,
                                 `professorName` TEXT,
                                 `professorContact` TEXT,
                                 `professorMail` TEXT,
@@ -156,22 +163,18 @@ class Data():
                                 `assistant2Name` TEXT,
                                 `assistant2Contact` TEXT,
                                 `assistant2Mail` TEXT,
-                                `academicNumber` TEXT,
-                                `classNumber` INTEGER,
-                                `totalStudentNumber` INTEGER,
-                                `grades` INTEGER,
                                 `scoreRatio` TEXT,
                                 `memo` TEXT,
-                                `dateTime` TEXT,
-                                `directory` TEXT
-                                `semester` TEXT);
-                                ''')
+                                `directory` TEXT,
+                                PRIMARY KEY (lectureCode,studentNumber,semester));''')
+        """
         # CourseList <강의코드, 학번>
         self.__cursor.execute('''create table `CourseList` (
                                 `lectureCode` TEXT NOT NULL,
                                 `studentNumber` INTEGER NOT NULL,
                                 PRIMARY KEY (lectureCode,studentNumber) );
                                 ''')
+        """
         # Notice <id, 제목, 작성일, 조회수, 내용, 파일링크>
         self.__cursor.execute('''create table `Notice` (
                                 `id` INTEGER NOT NULL PRIMARY KEY,
@@ -246,7 +249,7 @@ class Data():
 
     def insert(self, _table, _into, _values):
         if _into.__len__() != 0:
-            if _into.__len__() != _values.__len():
+            if _into.__len__() != _values.__len__():
                 raise ValueError('column 수와 value 수가 일치하지 않습니다.')
             query = 'INSERT INTO ' + str(_table) + '('
             for i in _into:
@@ -280,24 +283,22 @@ class Lecture():
     __lectureName = None
     __academicNumber = None
     __classNumber = None
-    __professorName = None
-    __professorMail = None
-    __professorContact = None
     __totalStudentNumber = None
     __grades = None
     __dateTime = None
+    __professorName = None
+    __professorContact = None
+    __professorMail = None
     __assistant1Name = None
     __assistant1Contact = None
     __assistant1Mail = None
     __assistant2Name = None
     __assistant2Contact = None
     __assistant2Mail = None
-
     #사용자 작성
     __scoreRatio = None
     __memo = None
     __directory = None
-    __semester = None
 
     def __init__(self,lectureData):
         raise NotImplementedError
@@ -331,12 +332,14 @@ class SemesterList(ListBase):
 
     def _ListBase__init(self):
         localList = self._ListBase__getLocalList()
+        self.__list = localList
         remoteList = self._ListBase__getRemoteList()
         oCmpResult = localList.keys() - remoteList.keys()  # drop semester
         nCmpReuslt = remoteList.keys() - localList.keys()  # add semester
         if (oCmpResult.__len__() != 0) or (nCmpReuslt.__len__() != 0):
             print("업데이트(변경) 항목이 있습니다. ")
             self._ListBase__updateLocalList(remoteList)
+
 
     # 로컬에 저장된 학기목록 로드
     # 학기코드(key) : 학기이름(value)로 구성
@@ -384,9 +387,9 @@ class SemesterList(ListBase):
     def _ListBase__updateLocalList(self, remote):
         data = Data.getInstance()
         user = User.getInstance()
-        for key, value in enumerate(remote):
-            insertColumn = ['studentNumber', 'semesterCode', 'semesterNmae']
-            insertValues = [user.getinfo('studentNumber'), key, value]
+        for key, value in remote.items():
+            insertColumn = ['studentNumber', 'semesterCode', 'semesterName']
+            insertValues = [user.getInfo('studentNumber'), key, value]
             data.insert('Semester', insertColumn, insertValues)
         self.__list = remote
 
@@ -413,6 +416,7 @@ class LectureList(ListBase):
 
     def _ListBase__init(self):
         localList = self._ListBase__getLocalList()
+        self.__list = localList
         remoteList = self._ListBase__getRemoteList()
         oCmpResult = localList.keys() - remoteList.keys()  # drop class
         nCmpReuslt = remoteList.keys() - localList.keys()  # add class
@@ -427,10 +431,12 @@ class LectureList(ListBase):
 
     def _ListBase__getLocalList(self):
         # 로컬데이터베이스로부터 강의정보를 읽어들여, data를 구축합니다.
-
+        data = Data.getInstance()
+        data.select('*', )
         raise NotImplementedError
 
     def _ListBase__getRemoteList(self):
+        lectureData = self.__scrapLectureData(self.__semesterCode)
         raise NotImplementedError
 
     def _ListBase__updatLocalList(self):
@@ -588,18 +594,41 @@ class LectureFactory():
         return cls.__instance
 
 
+class System():
+    __instance = None
 
-def systemCheck():
-    # 디렉토리 존재유무
-    # 데이터베이스 존재유무
-    # 네트워크 연결여부 검사
-    raise NotImplementedError
+    def __init__(self):
+        raise NotImplementedError
 
+    @classmethod
+    def getInstace(cls):
+        raise NotImplementedError
+
+    # 프로그램 실행시 체크
+    def InitCheck(self):
+        # 디렉토리 존재유무
+        # 데이터베이스 존재유무
+        # 네트워크 연결여부 검사
+        raise NotImplementedError
+
+    # 프로그램이 설치 후 최초로 실행되었을때
+    def firstCheck(self):
+        raise NotImplementedError
+
+    # 자동저장 프로시저
+    def autoSave(self):
+        raise NotImplementedError
+
+    # 로깅
+    def logging(self):
+        raise NotImplementedError
 
 if __name__ == "__main__":
     user = User.getInstance()
+    stNum = input("사용자 학번을 입력하세요 : ")
+    stPW = input("비밀번호를 입력하세요 : ")
     print('로그인중..')
-    if user.login('2013112003', 'asdf1020@@') is not True:
+    if user.login(stNum, stPW) is not True:
         print('로그인 실패')
         exit()
     print('로그인 성공! '+ user.getInfo('name') + '님, 환영합니다.')
@@ -612,4 +641,6 @@ if __name__ == "__main__":
     print('로컬데이터베이스 연결 성공.')
     print('\n학기 목록을 조회합니다..')
     semesterList = SemesterList.getInstance()
-    
+    print("학기목록 조회 & 업데이트 완료")
+
+    print("\n학기에 해당하는 강의정보를 불러옵니다.")
